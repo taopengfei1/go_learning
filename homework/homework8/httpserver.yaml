@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: httpserver
+  labels:
+    app: httpserver
+spec:
+  containers:
+    - name: httpserver
+      image: httpserver
+      env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+               name: http-config
+               key: PORT
+    livenessProbe:
+      exec:
+        command:
+        - curl
+        - /tmp/healthy
+      failureThreshold: 3
+      initialDelaySeconds: 60
+      periodSeconds: 60
+      successThreshold: 1
+      timeoutSeconds: 3
+    resources:
+      limits:
+        cpu: "100m"
+        memory: 100Mi
+      requests:
+        cpu: "200m"
+        memory: 1Gi
+    volumeMounts:
+      - name: varlog
+        mountPath: /var/logs
+ volumes:
+   - name: varlog
+     emptyDir: {}
+   - name: config
+     configMap:
+       name: http-config
+       items:
+         - key: PORT
+           path: "8080"
